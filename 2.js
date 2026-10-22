@@ -1,43 +1,53 @@
-// Yardımcı Fonksiyonlar
-const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-const rand = (min, max) => Math.random() * (max - min) + min;
+// ==UserScript==
+// @name         Perculus Attendance Automator
+// @namespace    http://tampermonkey.net/
+// @version      1.1.0
+// @description  Automatically clicks the attendance confirmation button on Perculus
+// @author       QUASAR
+// @match        https://kapadokya.perculus.com/*
+// @icon         https://www.google.com/s2/favicons?sz=64&domain=perculus.com
+// @grant        none
+// ==/UserScript==
 
-async function hummanClick(el) {
-    if (!el) return;
+(function() {
+    'use strict';
 
-    el.scrollIntoView({ block: "center", behavior: "smooth" });
-    await sleep(rand(150, 400));
+    const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+    const rand = (min, max) => Math.random() * (max - min) + min;
 
-    const rect = el.getBoundingClientRect();
-    const x = rect.left + rect.width * rand(0.3, 0.7);
-    const y = rect.top + rect.height * rand(0.3, 0.7);
-    const opts = { bubbles: true, cancelable: true, clientX: x, clientY: y };
+    async function humanClick(el) {
+        if (!el) return;
 
-    el.dispatchEvent(new MouseEvent("mousemove", opts));
-    await sleep(rand(30, 90));
+        // Tıklamadan önce 1 ile 3 saniye (1000ms - 3000ms) arası rastgele insansı bekleme
+        await sleep(rand(1000, 3000));
 
-    el.dispatchEvent(new MouseEvent("mouseover", opts));
-    el.dispatchEvent(new MouseEvent("mousedown", opts));
-    await sleep(rand(20, 70));
+        el.scrollIntoView({ block: "center", behavior: "smooth" });
+        await sleep(rand(150, 400));
 
-    el.dispatchEvent(new MouseEvent("mouseup", opts));
-    el.dispatchEvent(new MouseEvent("click", opts));
+        const rect = el.getBoundingClientRect();
+        const x = rect.left + rect.width * rand(0.3, 0.7);
+        const y = rect.top + rect.height * rand(0.3, 0.7);
+        const opts = { bubbles: true, cancelable: true, clientX: x, clientY: y };
 
-    console.log("Buradayım butonuna tıklandı!");
-}
+        el.dispatchEvent(new MouseEvent("mousemove", opts));
+        await sleep(rand(30, 90));
 
-// Sürekli ekranda bu butonu arayan ve gelince tıklayan döngü
-const checkAndClickInterval = setInterval(() => {
-    // Ekranda o an var olan butonlar arasından metni "Buradayım!" olanı bul
-    const buttons = Array.from(document.querySelectorAll('button[data-variant="primary"]'));
-    const targetButton = buttons.find(el => el.textContent.trim() === 'Buradayım!');
+        el.dispatchEvent(new MouseEvent("mouseover", opts));
+        el.dispatchEvent(new MouseEvent("mousedown", opts));
+        await sleep(rand(20, 70));
 
-    // Eğer buton ekranda belirdiyse (ve daha önce tıklayıp kaybetmediysek)
-    if (targetButton) {
-        // Görünür olduğundan emin olmak için offsetParent kontrolü de yapabiliriz (gizli değilse)
-        if (targetButton.offsetParent !== null) {
-            hummanClick(targetButton);
-        }
+        el.dispatchEvent(new MouseEvent("mouseup", opts));
+        el.dispatchEvent(new MouseEvent("click", opts));
+
+        console.log("Buradayım butonuna tıklandı!");
     }
-}, 1000);
 
+    setInterval(() => {
+        const buttons = Array.from(document.querySelectorAll('button[data-variant="primary"]'));
+        const targetButton = buttons.find(el => el.textContent.trim() === 'Buradayım!');
+
+        if (targetButton && targetButton.offsetParent !== null) {
+            humanClick(targetButton);
+        }
+    }, 1000);
+})();
